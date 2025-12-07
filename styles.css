@@ -474,9 +474,11 @@ label.required::after {
 .modal-list {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: 8px;
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
+    overscroll-behavior-y: contain;
+    touch-action: pan-y;
     max-height: calc(100vh - 200px);
 }
 

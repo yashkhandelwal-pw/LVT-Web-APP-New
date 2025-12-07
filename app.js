@@ -128,6 +128,11 @@ function setupModalDropdown(name, btnId, modalId, searchId, listId, selectId, se
     
     if (!btn || !modal) return; // Elements might not exist (e.g., district for field employees)
     
+    // Touch tracking for scroll detection
+    let touchStartY = 0;
+    let touchStartTime = 0;
+    let isScrolling = false;
+    
     // Open modal
     btn.addEventListener('click', () => {
         modal.classList.remove('hidden');
@@ -158,15 +163,44 @@ function setupModalDropdown(name, btnId, modalId, searchId, listId, selectId, se
         });
     });
     
-    // Item selection - BOTH touch and click events for mobile
-    list.addEventListener('touchend', (e) => {
-        e.preventDefault();
-        const item = e.target.closest('.modal-list-item');
-        if (!item) return;
-        
-        handleItemSelection(item);
-    }, { passive: false });
+    // Touch start - record position
+    list.addEventListener('touchstart', (e) => {
+        const touch = e.touches[0];
+        touchStartY = touch.clientY;
+        touchStartTime = Date.now();
+        isScrolling = false;
+    }, { passive: true });
     
+    // Touch move - detect scrolling
+    list.addEventListener('touchmove', (e) => {
+        const touch = e.touches[0];
+        const moveY = touch.clientY;
+        const diffY = Math.abs(moveY - touchStartY);
+        
+        // If moved more than 10px, it's a scroll
+        if (diffY > 10) {
+            isScrolling = true;
+        }
+    }, { passive: true });
+    
+    // Touch end - only select if not scrolling
+    list.addEventListener('touchend', (e) => {
+        const touchDuration = Date.now() - touchStartTime;
+        const item = e.target.closest('.modal-list-item');
+        
+        // Only select if:
+        // 1. Not scrolling (moved < 10px)
+        // 2. Quick tap (< 300ms)
+        // 3. Valid item exists
+        if (!isScrolling && touchDuration < 300 && item) {
+            handleItemSelection(item);
+        }
+        
+        // Reset for next touch
+        isScrolling = false;
+    }, { passive: true });
+    
+    // Click event for desktop
     list.addEventListener('click', (e) => {
         const item = e.target.closest('.modal-list-item');
         if (!item) return;
@@ -284,6 +318,11 @@ function setupStatusDropdown() {
     
     if (!btn || !dropdown) return;
     
+    // Touch tracking
+    let touchStartY = 0;
+    let touchStartTime = 0;
+    let isScrolling = false;
+    
     // Toggle dropdown
     btn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -299,13 +338,35 @@ function setupStatusDropdown() {
         }
     });
     
-    // Handle option selection - BOTH touch and click
+    // Handle option selection with proper touch detection
     options.forEach(option => {
-        // Touch event for mobile
+        // Touch start
+        option.addEventListener('touchstart', (e) => {
+            touchStartY = e.touches[0].clientY;
+            touchStartTime = Date.now();
+            isScrolling = false;
+        }, { passive: true });
+        
+        // Touch move
+        option.addEventListener('touchmove', (e) => {
+            const moveY = e.touches[0].clientY;
+            const diff = Math.abs(moveY - touchStartY);
+            if (diff > 10) {
+                isScrolling = true;
+            }
+        }, { passive: true });
+        
+        // Touch end - only select if not scrolling
         option.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            handleStatusSelection(option);
+            const touchDuration = Date.now() - touchStartTime;
+            
+            if (!isScrolling && touchDuration < 300) {
+                e.preventDefault();
+                e.stopPropagation();
+                handleStatusSelection(option);
+            }
+            
+            isScrolling = false;
         }, { passive: false });
         
         // Click event for desktop
