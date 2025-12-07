@@ -77,14 +77,11 @@ function setupSearchableDropdown(searchId, selectId) {
 
 // Custom Dropdowns Setup
 function setupCustomDropdowns() {
-    // Keyboard detection for mobile
-    setupKeyboardDetection();
+    // School Simple Dropdown
+    setupSimpleDropdown('school', 'schoolDropdownBtn', 'schoolDropdownPanel', 'schoolSearch', 'schoolList', 'schoolSelect', handleSchoolSelection);
     
-    // School Modal Dropdown
-    setupModalDropdown('school', 'schoolDropdownBtn', 'schoolModal', 'schoolSearch', 'schoolList', 'schoolSelect', handleSchoolSelection);
-    
-    // District Modal Dropdown (for managers)
-    setupModalDropdown('district', 'districtDropdownBtn', 'districtModal', 'districtSearch', 'districtList', 'districtSelect', handleDistrictSelection);
+    // District Simple Dropdown (for managers)
+    setupSimpleDropdown('district', 'districtDropdownBtn', 'districtDropdownPanel', 'districtSearch', 'districtList', 'districtSelect', handleDistrictSelection);
     
     // Subject Multiselect Dropdown
     setupMultiselectDropdown();
@@ -93,69 +90,53 @@ function setupCustomDropdowns() {
     setupStatusDropdown();
 }
 
-// Keyboard Detection for Mobile
-function setupKeyboardDetection() {
-    if (window.visualViewport) {
-        const updateViewportHeight = () => {
-            const vh = window.visualViewport.height;
-            document.documentElement.style.setProperty('--viewport-height', `${vh}px`);
-            
-            // Add class to modal lists when keyboard is visible
-            const keyboardVisible = window.innerHeight > vh + 100;
-            document.querySelectorAll('.modal-list').forEach(list => {
-                if (keyboardVisible) {
-                    list.classList.add('keyboard-visible');
-                } else {
-                    list.classList.remove('keyboard-visible');
-                }
-            });
-        };
-        
-        window.visualViewport.addEventListener('resize', updateViewportHeight);
-        window.visualViewport.addEventListener('scroll', updateViewportHeight);
-        updateViewportHeight();
-    }
-}
-
-// Setup Modal Dropdown (for School and District)
-function setupModalDropdown(name, btnId, modalId, searchId, listId, selectId, selectionHandler) {
+// Setup Simple Dropdown (Native Scroll - No Touch Conflicts)
+function setupSimpleDropdown(name, btnId, panelId, searchId, listId, selectId, selectionHandler) {
     const btn = document.getElementById(btnId);
-    const modal = document.getElementById(modalId);
+    const panel = document.getElementById(panelId);
     const searchInput = document.getElementById(searchId);
     const list = document.getElementById(listId);
     const select = document.getElementById(selectId);
-    const closeBtn = document.getElementById(`close${name.charAt(0).toUpperCase() + name.slice(1)}Modal`);
     
-    if (!btn || !modal) return; // Elements might not exist (e.g., district for field employees)
+    if (!btn || !panel) return;
     
-    // Touch tracking for scroll detection
-    let touchStartY = 0;
-    let touchStartTime = 0;
-    let isScrolling = false;
-    
-    // Open modal
-    btn.addEventListener('click', () => {
-        modal.classList.remove('hidden');
-        searchInput.value = '';
-        setTimeout(() => searchInput.focus(), 300);
+    // Toggle dropdown
+    btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        
+        // Close other dropdowns
+        document.querySelectorAll('.simple-dropdown-panel').forEach(p => {
+            if (p !== panel) p.classList.add('hidden');
+        });
+        document.querySelectorAll('.simple-dropdown-btn').forEach(b => {
+            if (b !== btn) b.classList.remove('active');
+        });
+        
+        // Toggle this dropdown
+        const isOpen = !panel.classList.contains('hidden');
+        if (isOpen) {
+            panel.classList.add('hidden');
+            btn.classList.remove('active');
+        } else {
+            panel.classList.remove('hidden');
+            btn.classList.add('active');
+            searchInput.value = '';
+            setTimeout(() => searchInput.focus(), 100);
+        }
     });
     
-    // Close modal
-    const closeModal = () => {
-        modal.classList.add('hidden');
-        searchInput.blur(); // Hide keyboard
-    };
-    
-    if (closeBtn) {
-        closeBtn.addEventListener('click', closeModal);
-    }
-    
-    modal.querySelector('.modal-backdrop')?.addEventListener('click', closeModal);
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!btn.contains(e.target) && !panel.contains(e.target)) {
+            panel.classList.add('hidden');
+            btn.classList.remove('active');
+        }
+    });
     
     // Search functionality
     searchInput.addEventListener('input', (e) => {
         const searchTerm = e.target.value.toLowerCase();
-        const items = list.querySelectorAll('.modal-list-item');
+        const items = list.querySelectorAll('.simple-dropdown-item');
         
         items.forEach(item => {
             const text = item.textContent.toLowerCase();
@@ -163,52 +144,11 @@ function setupModalDropdown(name, btnId, modalId, searchId, listId, selectId, se
         });
     });
     
-    // Touch start - record position
-    list.addEventListener('touchstart', (e) => {
-        const touch = e.touches[0];
-        touchStartY = touch.clientY;
-        touchStartTime = Date.now();
-        isScrolling = false;
-    }, { passive: true });
-    
-    // Touch move - detect scrolling
-    list.addEventListener('touchmove', (e) => {
-        const touch = e.touches[0];
-        const moveY = touch.clientY;
-        const diffY = Math.abs(moveY - touchStartY);
-        
-        // If moved more than 10px, it's a scroll
-        if (diffY > 10) {
-            isScrolling = true;
-        }
-    }, { passive: true });
-    
-    // Touch end - only select if not scrolling
-    list.addEventListener('touchend', (e) => {
-        const touchDuration = Date.now() - touchStartTime;
-        const item = e.target.closest('.modal-list-item');
-        
-        // Only select if:
-        // 1. Not scrolling (moved < 10px)
-        // 2. Quick tap (< 300ms)
-        // 3. Valid item exists
-        if (!isScrolling && touchDuration < 300 && item) {
-            handleItemSelection(item);
-        }
-        
-        // Reset for next touch
-        isScrolling = false;
-    }, { passive: true });
-    
-    // Click event for desktop
+    // Item selection - SIMPLE CLICK ONLY (Native scroll works!)
     list.addEventListener('click', (e) => {
-        const item = e.target.closest('.modal-list-item');
+        const item = e.target.closest('.simple-dropdown-item');
         if (!item) return;
         
-        handleItemSelection(item);
-    });
-    
-    function handleItemSelection(item) {
         const value = item.dataset.value;
         const text = item.textContent;
         
@@ -222,21 +162,20 @@ function setupModalDropdown(name, btnId, modalId, searchId, listId, selectId, se
         
         // Update hidden select
         select.value = value;
-        
-        // Trigger change event
         select.dispatchEvent(new Event('change'));
         
-        // Call selection handler if provided
+        // Call selection handler
         if (selectionHandler) {
             selectionHandler(value, text);
         }
         
-        // Close modal with slight delay for visual feedback
+        // Close dropdown
         setTimeout(() => {
-            closeModal();
+            panel.classList.add('hidden');
+            btn.classList.remove('active');
             item.classList.remove('selected');
         }, 150);
-    }
+    });
 }
 
 // Handle School Selection
@@ -318,11 +257,6 @@ function setupStatusDropdown() {
     
     if (!btn || !dropdown) return;
     
-    // Touch tracking
-    let touchStartY = 0;
-    let touchStartTime = 0;
-    let isScrolling = false;
-    
     // Toggle dropdown
     btn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -338,72 +272,39 @@ function setupStatusDropdown() {
         }
     });
     
-    // Handle option selection with proper touch detection
+    // Handle option selection - SIMPLE CLICK ONLY
     options.forEach(option => {
-        // Touch start
-        option.addEventListener('touchstart', (e) => {
-            touchStartY = e.touches[0].clientY;
-            touchStartTime = Date.now();
-            isScrolling = false;
-        }, { passive: true });
-        
-        // Touch move
-        option.addEventListener('touchmove', (e) => {
-            const moveY = e.touches[0].clientY;
-            const diff = Math.abs(moveY - touchStartY);
-            if (diff > 10) {
-                isScrolling = true;
-            }
-        }, { passive: true });
-        
-        // Touch end - only select if not scrolling
-        option.addEventListener('touchend', (e) => {
-            const touchDuration = Date.now() - touchStartTime;
-            
-            if (!isScrolling && touchDuration < 300) {
-                e.preventDefault();
-                e.stopPropagation();
-                handleStatusSelection(option);
-            }
-            
-            isScrolling = false;
-        }, { passive: false });
-        
-        // Click event for desktop
         option.addEventListener('click', (e) => {
             e.stopPropagation();
-            handleStatusSelection(option);
+            
+            const value = option.dataset.value;
+            const icon = option.querySelector('.status-icon-compact').textContent;
+            const label = option.querySelector('.status-label-compact').textContent;
+            const percent = option.querySelector('.status-percent-compact').textContent;
+            
+            // Visual feedback
+            option.classList.add('selected');
+            
+            // Update button text
+            const btnText = btn.querySelector('.dropdown-text');
+            btnText.innerHTML = `${icon} ${label} <span style="opacity: 0.7; font-size: 13px;">${percent}</span>`;
+            btnText.classList.remove('placeholder');
+            
+            // Update button color class
+            btn.classList.remove('selected-green', 'selected-yellow', 'selected-orange', 'selected-red');
+            btn.classList.add(`selected-${value.toLowerCase()}`);
+            
+            // Update hidden input
+            hiddenInput.value = value;
+            
+            // Close dropdown with slight delay
+            setTimeout(() => {
+                dropdown.classList.add('hidden');
+                btn.classList.remove('active');
+                option.classList.remove('selected');
+            }, 150);
         });
     });
-    
-    function handleStatusSelection(option) {
-        const value = option.dataset.value;
-        const icon = option.querySelector('.status-icon-compact').textContent;
-        const label = option.querySelector('.status-label-compact').textContent;
-        const percent = option.querySelector('.status-percent-compact').textContent;
-        
-        // Visual feedback
-        option.classList.add('selected');
-        
-        // Update button text
-        const btnText = btn.querySelector('.dropdown-text');
-        btnText.innerHTML = `${icon} ${label} <span style="opacity: 0.7; font-size: 13px;">${percent}</span>`;
-        btnText.classList.remove('placeholder');
-        
-        // Update button color class
-        btn.classList.remove('selected-green', 'selected-yellow', 'selected-orange', 'selected-red');
-        btn.classList.add(`selected-${value.toLowerCase()}`);
-        
-        // Update hidden input
-        hiddenInput.value = value;
-        
-        // Close dropdown with slight delay for feedback
-        setTimeout(() => {
-            dropdown.classList.add('hidden');
-            btn.classList.remove('active');
-            option.classList.remove('selected');
-        }, 150);
-    }
 }
 
 // Show/Hide Loading
@@ -531,14 +432,10 @@ async function loadFormData() {
 async function loadDistricts() {
     try {
         console.log('=== Loading Districts ===');
-        // Get all employees under this manager
         const { data: employees, error: empError } = await supabase
             .from('emp_record')
             .select('email')
             .or(`reporting_manager_email.eq.${currentUser.email},zonal_manager_email.eq.${currentUser.email}`);
-
-        console.log('Employees:', employees);
-        console.log('Employee error:', empError);
 
         if (empError) throw empError;
 
@@ -548,27 +445,19 @@ async function loadDistricts() {
         }
 
         const employeeEmails = employees.map(e => e.email);
-        console.log('Employee emails:', employeeEmails);
 
-        // Get unique districts for these employees
         const { data: schools, error: schoolError } = await supabase
             .from('lvt_universe_data_school_selector')
             .select('district')
             .in('employee_email', employeeEmails);
 
-        console.log('Schools for districts:', schools);
-        console.log('School error:', schoolError);
-
         if (schoolError) throw schoolError;
-
         if (!schools) return;
 
         const uniqueDistricts = [...new Set(schools.map(s => s.district).filter(d => d))];
         uniqueDistricts.sort();
 
-        console.log('Unique districts:', uniqueDistricts);
-
-        // Populate hidden select (for form submission)
+        // Populate hidden select
         const districtSelect = document.getElementById('districtSelect');
         districtSelect.innerHTML = '<option value="">Select District</option>';
         
@@ -579,14 +468,13 @@ async function loadDistricts() {
             districtSelect.appendChild(option);
         });
 
-        // Populate modal list
+        // Populate simple dropdown list
         const districtList = document.getElementById('districtList');
         if (districtList) {
             districtList.innerHTML = '';
             uniqueDistricts.forEach(district => {
-                const item = document.createElement('button');
-                item.className = 'modal-list-item';
-                item.type = 'button';
+                const item = document.createElement('div');
+                item.className = 'simple-dropdown-item';
                 item.dataset.value = district;
                 item.textContent = district;
                 districtList.appendChild(item);
@@ -604,64 +492,39 @@ async function loadSchools(district = null) {
     showLoading('Loading schools...');
 
     try {
-        console.log('=== Loading Schools ===');
-        console.log('User Role:', userRole);
-        console.log('Current User Email:', currentUser.email);
-        console.log('District:', district);
-
         let query = supabase
             .from('lvt_universe_data_school_selector')
             .select('*');
 
         if (userRole === 'field') {
-            console.log('Field employee - filtering by employee_email');
             query = query.eq('employee_email', currentUser.email);
         } else {
-            console.log('Manager - getting team employees first');
-            // Get employees under this manager
             const { data: employees, error: empError } = await supabase
                 .from('emp_record')
                 .select('email')
                 .or(`reporting_manager_email.eq.${currentUser.email},zonal_manager_email.eq.${currentUser.email}`);
 
-            if (empError) {
-                console.error('Error fetching employees:', empError);
-                throw empError;
-            }
-
-            console.log('Employees found:', employees);
+            if (empError) throw empError;
 
             if (!employees || employees.length === 0) {
-                console.warn('No employees found under this manager');
                 alert('No employees found under your management.');
                 hideLoading();
                 return;
             }
 
             const employeeEmails = employees.map(e => e.email);
-            console.log('Employee emails:', employeeEmails);
-
             query = query.in('employee_email', employeeEmails);
 
             if (district) {
-                console.log('Filtering by district:', district);
                 query = query.eq('district', district);
             }
         }
 
-        console.log('Executing query...');
         const { data: schools, error } = await query;
 
-        if (error) {
-            console.error('Query error:', error);
-            console.error('Error details:', JSON.stringify(error, null, 2));
-            throw error;
-        }
+        if (error) throw error;
 
-        console.log('Schools found:', schools ? schools.length : 0);
-        console.log('Schools data:', schools);
-
-        // Populate hidden select (for form submission)
+        // Populate hidden select
         const schoolSelect = document.getElementById('schoolSelect');
         schoolSelect.innerHTML = '<option value="">Select School</option>';
 
@@ -675,30 +538,25 @@ async function loadSchools(district = null) {
                 schoolSelect.appendChild(option);
             });
             
-            // Populate modal list
+            // Populate simple dropdown list
             const schoolList = document.getElementById('schoolList');
             if (schoolList) {
                 schoolList.innerHTML = '';
                 schools.forEach(school => {
-                    const item = document.createElement('button');
-                    item.className = 'modal-list-item';
-                    item.type = 'button';
+                    const item = document.createElement('div');
+                    item.className = 'simple-dropdown-item';
                     item.dataset.value = JSON.stringify(school);
                     item.textContent = school.school_name;
                     schoolList.appendChild(item);
                 });
             }
-            
-            console.log('School dropdown populated successfully');
         } else {
-            console.warn('No schools to display');
             alert('No schools found for your account. Please contact admin.');
         }
 
     } catch (error) {
         console.error('Error loading schools:', error);
-        console.error('Error stack:', error.stack);
-        alert(`Error loading schools: ${error.message}. Please check console for details.`);
+        alert(`Error loading schools: ${error.message}`);
     } finally {
         hideLoading();
     }

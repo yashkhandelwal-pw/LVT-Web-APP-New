@@ -68,71 +68,47 @@
                 <!-- District Selection (for managers only) -->
                 <div id="districtGroup" class="form-group hidden">
                     <label for="districtSelect" class="required">Select District</label>
-                    <button type="button" class="custom-dropdown-btn" id="districtDropdownBtn">
-                        <span class="dropdown-text">Select District</span>
-                        <svg class="dropdown-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
-                    </button>
+                    <div class="simple-dropdown-container">
+                        <button type="button" class="simple-dropdown-btn" id="districtDropdownBtn">
+                            <span class="dropdown-text">Select District</span>
+                            <svg class="dropdown-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+                        <div class="simple-dropdown-panel hidden" id="districtDropdownPanel">
+                            <div class="simple-dropdown-search">
+                                <input type="text" id="districtSearch" class="simple-search-input" placeholder="Search district...">
+                            </div>
+                            <div class="simple-dropdown-list" id="districtList"></div>
+                        </div>
+                    </div>
                     <select id="districtSelect" class="hidden-native-select">
                         <option value="">Select District</option>
                     </select>
                     <span class="error-message" id="districtError"></span>
                 </div>
 
-                <!-- District Modal -->
-                <div id="districtModal" class="custom-modal hidden">
-                    <div class="modal-backdrop"></div>
-                    <div class="modal-panel">
-                        <div class="modal-header">
-                            <h3>Select District</h3>
-                            <button type="button" class="modal-close" id="closeDistrictModal">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                                </svg>
-                            </button>
-                        </div>
-                        <div class="modal-search">
-                            <input type="text" id="districtSearch" class="modal-search-input" placeholder="Search district...">
-                        </div>
-                        <div class="modal-list" id="districtList"></div>
-                    </div>
-                </div>
-
                 <!-- School Selection -->
                 <div id="schoolGroup" class="form-group">
                     <label for="schoolSelect" class="required">Select School</label>
-                    <button type="button" class="custom-dropdown-btn" id="schoolDropdownBtn">
-                        <span class="dropdown-text">Select School</span>
-                        <svg class="dropdown-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
-                    </button>
+                    <div class="simple-dropdown-container">
+                        <button type="button" class="simple-dropdown-btn" id="schoolDropdownBtn">
+                            <span class="dropdown-text">Select School</span>
+                            <svg class="dropdown-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+                        <div class="simple-dropdown-panel hidden" id="schoolDropdownPanel">
+                            <div class="simple-dropdown-search">
+                                <input type="text" id="schoolSearch" class="simple-search-input" placeholder="Search schools...">
+                            </div>
+                            <div class="simple-dropdown-list" id="schoolList"></div>
+                        </div>
+                    </div>
                     <select id="schoolSelect" class="hidden-native-select">
                         <option value="">Select School</option>
                     </select>
                     <span class="error-message" id="schoolError"></span>
-                </div>
-
-                <!-- School Modal -->
-                <div id="schoolModal" class="custom-modal hidden">
-                    <div class="modal-backdrop"></div>
-                    <div class="modal-panel">
-                        <div class="modal-header">
-                            <h3>Select School</h3>
-                            <button type="button" class="modal-close" id="closeSchoolModal">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                                </svg>
-                            </button>
-                        </div>
-                        <div class="modal-search">
-                            <input type="text" id="schoolSearch" class="modal-search-input" placeholder="Search schools...">
-                        </div>
-                        <div class="modal-list" id="schoolList"></div>
-                    </div>
                 </div>
 
                 <!-- Sampling Needed -->
