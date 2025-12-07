@@ -34,8 +34,6 @@ function setupEventListeners() {
     logoutBtn.addEventListener('click', handleLogout);
 
     // Form field listeners
-    document.getElementById('districtSelect').addEventListener('change', handleDistrictChange);
-    document.getElementById('schoolSelect').addEventListener('change', handleSchoolChange);
     document.getElementById('samplingSelect').addEventListener('change', handleSamplingChange);
     document.getElementById('spocSelect').addEventListener('change', handleSpocChange);
     document.getElementById('captureBtn').addEventListener('click', () => {
@@ -45,9 +43,8 @@ function setupEventListeners() {
     document.getElementById('removeImageBtn').addEventListener('click', removeImage);
     document.getElementById('newVisitBtn').addEventListener('click', resetForm);
 
-    // Search functionality
-    setupSearchableDropdown('districtSearch', 'districtSelect');
-    setupSearchableDropdown('schoolSearch', 'schoolSelect');
+    // Custom dropdown setup
+    setupCustomDropdowns();
 
     // Form submission
     visitForm.addEventListener('submit', handleSubmit);
@@ -74,6 +71,211 @@ function setupSearchableDropdown(searchId, selectId) {
             if (option.value === '') return;
             const text = option.textContent.toLowerCase();
             option.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+    });
+}
+
+// Custom Dropdowns Setup
+function setupCustomDropdowns() {
+    // School Modal Dropdown
+    setupModalDropdown('school', 'schoolDropdownBtn', 'schoolModal', 'schoolSearch', 'schoolList', 'schoolSelect', handleSchoolSelection);
+    
+    // District Modal Dropdown (for managers)
+    setupModalDropdown('district', 'districtDropdownBtn', 'districtModal', 'districtSearch', 'districtList', 'districtSelect', handleDistrictSelection);
+    
+    // Subject Multiselect Dropdown
+    setupMultiselectDropdown();
+    
+    // Visit Status Dropdown
+    setupStatusDropdown();
+}
+
+// Setup Modal Dropdown (for School and District)
+function setupModalDropdown(name, btnId, modalId, searchId, listId, selectId, selectionHandler) {
+    const btn = document.getElementById(btnId);
+    const modal = document.getElementById(modalId);
+    const searchInput = document.getElementById(searchId);
+    const list = document.getElementById(listId);
+    const select = document.getElementById(selectId);
+    const closeBtn = document.getElementById(`close${name.charAt(0).toUpperCase() + name.slice(1)}Modal`);
+    
+    if (!btn || !modal) return; // Elements might not exist (e.g., district for field employees)
+    
+    // Open modal
+    btn.addEventListener('click', () => {
+        modal.classList.remove('hidden');
+        searchInput.value = '';
+        searchInput.focus();
+    });
+    
+    // Close modal
+    const closeModal = () => {
+        modal.classList.add('hidden');
+    };
+    
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeModal);
+    }
+    
+    modal.querySelector('.modal-backdrop')?.addEventListener('click', closeModal);
+    
+    // Search functionality
+    searchInput.addEventListener('input', (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        const items = list.querySelectorAll('.modal-list-item');
+        
+        items.forEach(item => {
+            const text = item.textContent.toLowerCase();
+            item.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+    });
+    
+    // Item selection
+    list.addEventListener('click', (e) => {
+        const item = e.target.closest('.modal-list-item');
+        if (!item) return;
+        
+        const value = item.dataset.value;
+        const text = item.textContent;
+        
+        // Update button text
+        const btnText = btn.querySelector('.dropdown-text');
+        btnText.textContent = text;
+        btnText.classList.remove('placeholder');
+        
+        // Update hidden select
+        select.value = value;
+        
+        // Trigger change event
+        select.dispatchEvent(new Event('change'));
+        
+        // Close modal
+        closeModal();
+        
+        // Call selection handler if provided
+        if (selectionHandler) {
+            selectionHandler(value, text);
+        }
+    });
+}
+
+// Handle School Selection
+function handleSchoolSelection(value, text) {
+    if (!value) return;
+    
+    selectedSchool = JSON.parse(value);
+    
+    // Show remaining form fields
+    document.getElementById('samplingGroup').classList.remove('hidden');
+    document.getElementById('discussionGroup').classList.remove('hidden');
+    document.getElementById('spocGroup').classList.remove('hidden');
+    document.getElementById('coVisitor1Group').classList.remove('hidden');
+    document.getElementById('coVisitor2Group').classList.remove('hidden');
+    document.getElementById('remarksGroup').classList.remove('hidden');
+    document.getElementById('visitStatusGroup').classList.remove('hidden');
+    document.getElementById('imageGroup').classList.remove('hidden');
+    document.getElementById('submitGroup').classList.remove('hidden');
+    
+    // Populate SPOC dropdown
+    populateSpocDropdown();
+}
+
+// Handle District Selection
+async function handleDistrictSelection(value, text) {
+    if (!value) return;
+    await loadSchools(value);
+}
+
+// Setup Multiselect Dropdown (for Subjects)
+function setupMultiselectDropdown() {
+    const btn = document.getElementById('subjectDropdownBtn');
+    const dropdown = document.getElementById('subjectDropdown');
+    const checkboxes = dropdown.querySelectorAll('input[type="checkbox"]');
+    
+    if (!btn || !dropdown) return;
+    
+    // Toggle dropdown
+    btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdown.classList.toggle('hidden');
+        btn.classList.toggle('active');
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!btn.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.classList.add('hidden');
+            btn.classList.remove('active');
+        }
+    });
+    
+    // Update button text based on selections
+    const updateButtonText = () => {
+        const checkedBoxes = Array.from(checkboxes).filter(cb => cb.checked);
+        const btnText = btn.querySelector('.dropdown-text');
+        
+        if (checkedBoxes.length === 0) {
+            btnText.textContent = 'Select Subjects...';
+            btnText.classList.add('placeholder');
+        } else {
+            btnText.textContent = `${checkedBoxes.length} subject${checkedBoxes.length > 1 ? 's' : ''} selected`;
+            btnText.classList.remove('placeholder');
+        }
+    };
+    
+    // Listen for checkbox changes
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', updateButtonText);
+    });
+}
+
+// Setup Status Dropdown
+function setupStatusDropdown() {
+    const btn = document.getElementById('visitStatusDropdownBtn');
+    const dropdown = document.getElementById('visitStatusDropdown');
+    const options = dropdown.querySelectorAll('.status-option-compact');
+    const hiddenInput = document.getElementById('visitStatusHidden');
+    
+    if (!btn || !dropdown) return;
+    
+    // Toggle dropdown
+    btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdown.classList.toggle('hidden');
+        btn.classList.toggle('active');
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!btn.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.classList.add('hidden');
+            btn.classList.remove('active');
+        }
+    });
+    
+    // Handle option selection
+    options.forEach(option => {
+        option.addEventListener('click', () => {
+            const value = option.dataset.value;
+            const icon = option.querySelector('.status-icon-compact').textContent;
+            const label = option.querySelector('.status-label-compact').textContent;
+            const percent = option.querySelector('.status-percent-compact').textContent;
+            
+            // Update button text
+            const btnText = btn.querySelector('.dropdown-text');
+            btnText.innerHTML = `${icon} ${label} <span style="opacity: 0.7; font-size: 13px;">${percent}</span>`;
+            btnText.classList.remove('placeholder');
+            
+            // Update button color class
+            btn.classList.remove('selected-green', 'selected-yellow', 'selected-orange', 'selected-red');
+            btn.classList.add(`selected-${value.toLowerCase()}`);
+            
+            // Update hidden input
+            hiddenInput.value = value;
+            
+            // Close dropdown
+            dropdown.classList.add('hidden');
+            btn.classList.remove('active');
         });
     });
 }
@@ -240,9 +442,10 @@ async function loadDistricts() {
 
         console.log('Unique districts:', uniqueDistricts);
 
+        // Populate hidden select (for form submission)
         const districtSelect = document.getElementById('districtSelect');
         districtSelect.innerHTML = '<option value="">Select District</option>';
-
+        
         uniqueDistricts.forEach(district => {
             const option = document.createElement('option');
             option.value = district;
@@ -250,18 +453,24 @@ async function loadDistricts() {
             districtSelect.appendChild(option);
         });
 
+        // Populate modal list
+        const districtList = document.getElementById('districtList');
+        if (districtList) {
+            districtList.innerHTML = '';
+            uniqueDistricts.forEach(district => {
+                const item = document.createElement('button');
+                item.className = 'modal-list-item';
+                item.type = 'button';
+                item.dataset.value = district;
+                item.textContent = district;
+                districtList.appendChild(item);
+            });
+        }
+
     } catch (error) {
         console.error('Error loading districts:', error);
         alert(`Error loading districts: ${error.message}`);
     }
-}
-
-// Handle District Change
-async function handleDistrictChange(e) {
-    const district = e.target.value;
-    if (!district) return;
-
-    await loadSchools(district);
 }
 
 // Load Schools
@@ -326,6 +535,7 @@ async function loadSchools(district = null) {
         console.log('Schools found:', schools ? schools.length : 0);
         console.log('Schools data:', schools);
 
+        // Populate hidden select (for form submission)
         const schoolSelect = document.getElementById('schoolSelect');
         schoolSelect.innerHTML = '<option value="">Select School</option>';
 
@@ -338,6 +548,21 @@ async function loadSchools(district = null) {
                 option.textContent = school.school_name;
                 schoolSelect.appendChild(option);
             });
+            
+            // Populate modal list
+            const schoolList = document.getElementById('schoolList');
+            if (schoolList) {
+                schoolList.innerHTML = '';
+                schools.forEach(school => {
+                    const item = document.createElement('button');
+                    item.className = 'modal-list-item';
+                    item.type = 'button';
+                    item.dataset.value = JSON.stringify(school);
+                    item.textContent = school.school_name;
+                    schoolList.appendChild(item);
+                });
+            }
+            
             console.log('School dropdown populated successfully');
         } else {
             console.warn('No schools to display');
@@ -351,28 +576,6 @@ async function loadSchools(district = null) {
     } finally {
         hideLoading();
     }
-}
-
-// Handle School Change
-function handleSchoolChange(e) {
-    const schoolData = e.target.value;
-    if (!schoolData) return;
-
-    selectedSchool = JSON.parse(schoolData);
-
-    // Show remaining form fields
-    document.getElementById('samplingGroup').classList.remove('hidden');
-    document.getElementById('discussionGroup').classList.remove('hidden');
-    document.getElementById('spocGroup').classList.remove('hidden');
-    document.getElementById('coVisitor1Group').classList.remove('hidden');
-    document.getElementById('coVisitor2Group').classList.remove('hidden');
-    document.getElementById('remarksGroup').classList.remove('hidden');
-    document.getElementById('visitStatusGroup').classList.remove('hidden');
-    document.getElementById('imageGroup').classList.remove('hidden');
-    document.getElementById('submitGroup').classList.remove('hidden');
-
-    // Populate SPOC dropdown
-    populateSpocDropdown();
 }
 
 // Populate SPOC Dropdown
@@ -642,7 +845,7 @@ function validateForm() {
     }
 
     // Visit status
-    const visitStatus = document.querySelector('input[name="visitStatus"]:checked');
+    const visitStatus = document.getElementById('visitStatusHidden').value;
     if (!visitStatus) {
         showError('visitStatusError', 'Please select a visit status');
         isValid = false;
@@ -801,7 +1004,7 @@ async function prepareSubmissionData(submissionId, location, imageUrl) {
     const coVisitor1 = document.getElementById('coVisitor1Select').value || null;
     const coVisitor2 = document.getElementById('coVisitor2Select').value || null;
     const remarks = document.getElementById('remarksInput').value.trim() || null;
-    const visitStatus = document.querySelector('input[name="visitStatus"]:checked').value;
+    const visitStatus = document.getElementById('visitStatusHidden').value;
 
     // Get subjects
     let subjects = null;

@@ -68,27 +68,71 @@
                 <!-- District Selection (for managers only) -->
                 <div id="districtGroup" class="form-group hidden">
                     <label for="districtSelect" class="required">Select District</label>
-                    <div class="select-wrapper">
-                        <input type="text" id="districtSearch" class="input-field search-input"
-                            placeholder="Search district...">
-                        <select id="districtSelect" class="input-field select-field">
-                            <option value="">Select District</option>
-                        </select>
-                    </div>
+                    <button type="button" class="custom-dropdown-btn" id="districtDropdownBtn">
+                        <span class="dropdown-text">Select District</span>
+                        <svg class="dropdown-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <select id="districtSelect" class="hidden-native-select">
+                        <option value="">Select District</option>
+                    </select>
                     <span class="error-message" id="districtError"></span>
+                </div>
+
+                <!-- District Modal -->
+                <div id="districtModal" class="custom-modal hidden">
+                    <div class="modal-backdrop"></div>
+                    <div class="modal-panel">
+                        <div class="modal-header">
+                            <h3>Select District</h3>
+                            <button type="button" class="modal-close" id="closeDistrictModal">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="modal-search">
+                            <input type="text" id="districtSearch" class="modal-search-input" placeholder="Search district...">
+                        </div>
+                        <div class="modal-list" id="districtList"></div>
+                    </div>
                 </div>
 
                 <!-- School Selection -->
                 <div id="schoolGroup" class="form-group">
                     <label for="schoolSelect" class="required">Select School</label>
-                    <div class="select-wrapper">
-                        <input type="text" id="schoolSearch" class="input-field search-input"
-                            placeholder="Search school...">
-                        <select id="schoolSelect" class="input-field select-field">
-                            <option value="">Select School</option>
-                        </select>
-                    </div>
+                    <button type="button" class="custom-dropdown-btn" id="schoolDropdownBtn">
+                        <span class="dropdown-text">Select School</span>
+                        <svg class="dropdown-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <select id="schoolSelect" class="hidden-native-select">
+                        <option value="">Select School</option>
+                    </select>
                     <span class="error-message" id="schoolError"></span>
+                </div>
+
+                <!-- School Modal -->
+                <div id="schoolModal" class="custom-modal hidden">
+                    <div class="modal-backdrop"></div>
+                    <div class="modal-panel">
+                        <div class="modal-header">
+                            <h3>Select School</h3>
+                            <button type="button" class="modal-close" id="closeSchoolModal">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="modal-search">
+                            <input type="text" id="schoolSearch" class="modal-search-input" placeholder="Search schools...">
+                        </div>
+                        <div class="modal-list" id="schoolList"></div>
+                    </div>
                 </div>
 
                 <!-- Sampling Needed -->
@@ -106,52 +150,58 @@
                 <!-- Subject Selection (conditional) -->
                 <div id="subjectGroup" class="form-group hidden">
                     <label class="required">Select Subjects for Sampling</label>
-                    <div class="checkbox-grid">
-                        <label class="checkbox-label">
+                    <button type="button" class="custom-dropdown-btn multiselect-btn" id="subjectDropdownBtn">
+                        <span class="dropdown-text">Select Subjects...</span>
+                        <svg class="dropdown-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <div id="subjectDropdown" class="multiselect-dropdown hidden">
+                        <label class="multiselect-option">
                             <input type="checkbox" name="subject" value="Maths">
                             <span>Maths</span>
                         </label>
-                        <label class="checkbox-label">
+                        <label class="multiselect-option">
                             <input type="checkbox" name="subject" value="Science">
                             <span>Science</span>
                         </label>
-                        <label class="checkbox-label">
+                        <label class="multiselect-option">
                             <input type="checkbox" name="subject" value="English Literature">
                             <span>English Literature</span>
                         </label>
-                        <label class="checkbox-label">
+                        <label class="multiselect-option">
                             <input type="checkbox" name="subject" value="English Grammar">
                             <span>English Grammar</span>
                         </label>
-                        <label class="checkbox-label">
+                        <label class="multiselect-option">
                             <input type="checkbox" name="subject" value="Hindi Literature">
                             <span>Hindi Literature</span>
                         </label>
-                        <label class="checkbox-label">
+                        <label class="multiselect-option">
                             <input type="checkbox" name="subject" value="Hindi Grammar">
                             <span>Hindi Grammar</span>
                         </label>
-                        <label class="checkbox-label">
+                        <label class="multiselect-option">
                             <input type="checkbox" name="subject" value="Social Studies">
                             <span>Social Studies</span>
                         </label>
-                        <label class="checkbox-label">
+                        <label class="multiselect-option">
                             <input type="checkbox" name="subject" value="EVS">
                             <span>EVS</span>
                         </label>
-                        <label class="checkbox-label">
+                        <label class="multiselect-option">
                             <input type="checkbox" name="subject" value="GK">
                             <span>GK</span>
                         </label>
-                        <label class="checkbox-label">
+                        <label class="multiselect-option">
                             <input type="checkbox" name="subject" value="Computer Science">
                             <span>Computer Science</span>
                         </label>
-                        <label class="checkbox-label">
+                        <label class="multiselect-option">
                             <input type="checkbox" name="subject" value="Art">
                             <span>Art</span>
                         </label>
-                        <label class="checkbox-label">
+                        <label class="multiselect-option">
                             <input type="checkbox" name="subject" value="Already shared in previous visit">
                             <span>Already shared in previous visit</span>
                         </label>
@@ -258,40 +308,43 @@
                 <div id="visitStatusGroup" class="form-group hidden">
                     <label for="visitStatusSelect" class="required">After your visit, how likely is this school to give
                         us the K-8 order?</label>
-                    <div class="status-options">
-                        <label class="status-option">
-                            <input type="radio" name="visitStatus" value="Green">
-                            <span class="status-card green">
-                                <span class="status-icon">🟢</span>
-                                <span class="status-label">Green</span>
-                                <span class="status-percent">90%+</span>
-                            </span>
-                        </label>
-                        <label class="status-option">
-                            <input type="radio" name="visitStatus" value="Yellow">
-                            <span class="status-card yellow">
-                                <span class="status-icon">🟡</span>
-                                <span class="status-label">Yellow</span>
-                                <span class="status-percent">70–90%</span>
-                            </span>
-                        </label>
-                        <label class="status-option">
-                            <input type="radio" name="visitStatus" value="Orange">
-                            <span class="status-card orange">
-                                <span class="status-icon">🟠</span>
-                                <span class="status-label">Orange</span>
-                                <span class="status-percent">30–70%</span>
-                            </span>
-                        </label>
-                        <label class="status-option">
-                            <input type="radio" name="visitStatus" value="Red">
-                            <span class="status-card red">
-                                <span class="status-icon">🔴</span>
-                                <span class="status-label">Red</span>
-                                <span class="status-percent">&lt;30%</span>
-                            </span>
-                        </label>
+                    <button type="button" class="custom-dropdown-btn status-dropdown-btn" id="visitStatusDropdownBtn">
+                        <span class="dropdown-text">Select Visit Status</span>
+                        <svg class="dropdown-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <div id="visitStatusDropdown" class="status-dropdown hidden">
+                        <button type="button" class="status-option-compact" data-value="Green">
+                            <span class="status-icon-compact">🟢</span>
+                            <div class="status-info-compact">
+                                <span class="status-label-compact">Green</span>
+                                <span class="status-percent-compact">90%+</span>
+                            </div>
+                        </button>
+                        <button type="button" class="status-option-compact" data-value="Yellow">
+                            <span class="status-icon-compact">🟡</span>
+                            <div class="status-info-compact">
+                                <span class="status-label-compact">Yellow</span>
+                                <span class="status-percent-compact">70–90%</span>
+                            </div>
+                        </button>
+                        <button type="button" class="status-option-compact" data-value="Orange">
+                            <span class="status-icon-compact">🟠</span>
+                            <div class="status-info-compact">
+                                <span class="status-label-compact">Orange</span>
+                                <span class="status-percent-compact">30–70%</span>
+                            </div>
+                        </button>
+                        <button type="button" class="status-option-compact" data-value="Red">
+                            <span class="status-icon-compact">🔴</span>
+                            <div class="status-info-compact">
+                                <span class="status-label-compact">Red</span>
+                                <span class="status-percent-compact">&lt;30%</span>
+                            </div>
+                        </button>
                     </div>
+                    <input type="hidden" name="visitStatus" id="visitStatusHidden">
                     <span class="error-message" id="visitStatusError"></span>
                 </div>
 
