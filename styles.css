@@ -399,12 +399,14 @@ label.required::after {
     position: relative;
     background: white;
     width: 100%;
-    max-height: 80vh;
+    max-height: 100vh;
+    height: 100vh;
     border-radius: var(--radius-xl) var(--radius-xl) 0 0;
     display: flex;
     flex-direction: column;
     transform: translateY(100%);
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    padding-bottom: env(safe-area-inset-bottom);
 }
 
 .custom-modal:not(.hidden) .modal-panel {
@@ -447,6 +449,10 @@ label.required::after {
 .modal-search {
     padding: 16px 20px;
     border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 60px;
+    background: white;
+    z-index: 10;
 }
 
 .modal-search-input {
@@ -469,6 +475,13 @@ label.required::after {
     flex: 1;
     overflow-y: auto;
     padding: 8px;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    max-height: calc(100vh - 200px);
+}
+
+.modal-list.keyboard-visible {
+    max-height: calc(var(--viewport-height, 100vh) - 200px);
 }
 
 .modal-list-item {
@@ -483,14 +496,19 @@ label.required::after {
     width: 100%;
     text-align: left;
     margin-bottom: 4px;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .modal-list-item:hover {
     background: var(--bg-secondary);
 }
 
-.modal-list-item:active {
-    background: var(--bg-tertiary);
+.modal-list-item:active,
+.modal-list-item.selected {
+    background: var(--primary-color);
+    color: white;
+    transform: scale(0.98);
 }
 
 /* Multiselect Dropdown */
@@ -566,6 +584,8 @@ label.required::after {
     cursor: pointer;
     transition: var(--transition);
     text-align: left;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .status-option-compact:last-child {
@@ -576,8 +596,16 @@ label.required::after {
     background: var(--bg-secondary);
 }
 
-.status-option-compact:active {
-    background: var(--bg-tertiary);
+.status-option-compact:active,
+.status-option-compact.selected {
+    background: var(--primary-color);
+    color: white;
+    transform: scale(0.98);
+}
+
+.status-option-compact.selected .status-label-compact,
+.status-option-compact.selected .status-percent-compact {
+    color: white;
 }
 
 .status-icon-compact {

@@ -77,6 +77,9 @@ function setupSearchableDropdown(searchId, selectId) {
 
 // Custom Dropdowns Setup
 function setupCustomDropdowns() {
+    // Keyboard detection for mobile
+    setupKeyboardDetection();
+    
     // School Modal Dropdown
     setupModalDropdown('school', 'schoolDropdownBtn', 'schoolModal', 'schoolSearch', 'schoolList', 'schoolSelect', handleSchoolSelection);
     
@@ -88,6 +91,30 @@ function setupCustomDropdowns() {
     
     // Visit Status Dropdown
     setupStatusDropdown();
+}
+
+// Keyboard Detection for Mobile
+function setupKeyboardDetection() {
+    if (window.visualViewport) {
+        const updateViewportHeight = () => {
+            const vh = window.visualViewport.height;
+            document.documentElement.style.setProperty('--viewport-height', `${vh}px`);
+            
+            // Add class to modal lists when keyboard is visible
+            const keyboardVisible = window.innerHeight > vh + 100;
+            document.querySelectorAll('.modal-list').forEach(list => {
+                if (keyboardVisible) {
+                    list.classList.add('keyboard-visible');
+                } else {
+                    list.classList.remove('keyboard-visible');
+                }
+            });
+        };
+        
+        window.visualViewport.addEventListener('resize', updateViewportHeight);
+        window.visualViewport.addEventListener('scroll', updateViewportHeight);
+        updateViewportHeight();
+    }
 }
 
 // Setup Modal Dropdown (for School and District)
@@ -105,12 +132,13 @@ function setupModalDropdown(name, btnId, modalId, searchId, listId, selectId, se
     btn.addEventListener('click', () => {
         modal.classList.remove('hidden');
         searchInput.value = '';
-        searchInput.focus();
+        setTimeout(() => searchInput.focus(), 300);
     });
     
     // Close modal
     const closeModal = () => {
         modal.classList.add('hidden');
+        searchInput.blur(); // Hide keyboard
     };
     
     if (closeBtn) {
@@ -130,13 +158,28 @@ function setupModalDropdown(name, btnId, modalId, searchId, listId, selectId, se
         });
     });
     
-    // Item selection
+    // Item selection - BOTH touch and click events for mobile
+    list.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        const item = e.target.closest('.modal-list-item');
+        if (!item) return;
+        
+        handleItemSelection(item);
+    }, { passive: false });
+    
     list.addEventListener('click', (e) => {
         const item = e.target.closest('.modal-list-item');
         if (!item) return;
         
+        handleItemSelection(item);
+    });
+    
+    function handleItemSelection(item) {
         const value = item.dataset.value;
         const text = item.textContent;
+        
+        // Visual feedback
+        item.classList.add('selected');
         
         // Update button text
         const btnText = btn.querySelector('.dropdown-text');
@@ -149,14 +192,17 @@ function setupModalDropdown(name, btnId, modalId, searchId, listId, selectId, se
         // Trigger change event
         select.dispatchEvent(new Event('change'));
         
-        // Close modal
-        closeModal();
-        
         // Call selection handler if provided
         if (selectionHandler) {
             selectionHandler(value, text);
         }
-    });
+        
+        // Close modal with slight delay for visual feedback
+        setTimeout(() => {
+            closeModal();
+            item.classList.remove('selected');
+        }, 150);
+    }
 }
 
 // Handle School Selection
@@ -253,31 +299,50 @@ function setupStatusDropdown() {
         }
     });
     
-    // Handle option selection
+    // Handle option selection - BOTH touch and click
     options.forEach(option => {
-        option.addEventListener('click', () => {
-            const value = option.dataset.value;
-            const icon = option.querySelector('.status-icon-compact').textContent;
-            const label = option.querySelector('.status-label-compact').textContent;
-            const percent = option.querySelector('.status-percent-compact').textContent;
-            
-            // Update button text
-            const btnText = btn.querySelector('.dropdown-text');
-            btnText.innerHTML = `${icon} ${label} <span style="opacity: 0.7; font-size: 13px;">${percent}</span>`;
-            btnText.classList.remove('placeholder');
-            
-            // Update button color class
-            btn.classList.remove('selected-green', 'selected-yellow', 'selected-orange', 'selected-red');
-            btn.classList.add(`selected-${value.toLowerCase()}`);
-            
-            // Update hidden input
-            hiddenInput.value = value;
-            
-            // Close dropdown
-            dropdown.classList.add('hidden');
-            btn.classList.remove('active');
+        // Touch event for mobile
+        option.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handleStatusSelection(option);
+        }, { passive: false });
+        
+        // Click event for desktop
+        option.addEventListener('click', (e) => {
+            e.stopPropagation();
+            handleStatusSelection(option);
         });
     });
+    
+    function handleStatusSelection(option) {
+        const value = option.dataset.value;
+        const icon = option.querySelector('.status-icon-compact').textContent;
+        const label = option.querySelector('.status-label-compact').textContent;
+        const percent = option.querySelector('.status-percent-compact').textContent;
+        
+        // Visual feedback
+        option.classList.add('selected');
+        
+        // Update button text
+        const btnText = btn.querySelector('.dropdown-text');
+        btnText.innerHTML = `${icon} ${label} <span style="opacity: 0.7; font-size: 13px;">${percent}</span>`;
+        btnText.classList.remove('placeholder');
+        
+        // Update button color class
+        btn.classList.remove('selected-green', 'selected-yellow', 'selected-orange', 'selected-red');
+        btn.classList.add(`selected-${value.toLowerCase()}`);
+        
+        // Update hidden input
+        hiddenInput.value = value;
+        
+        // Close dropdown with slight delay for feedback
+        setTimeout(() => {
+            dropdown.classList.add('hidden');
+            btn.classList.remove('active');
+            option.classList.remove('selected');
+        }, 150);
+    }
 }
 
 // Show/Hide Loading
