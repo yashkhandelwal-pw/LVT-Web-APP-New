@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#6366f1">
+    <title>Live Visit Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="spinner"></div>
+        <p class="loading-text">Processing...</p>
+    </div>
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="screen active">
+        <div class="login-container">
+            <div class="logo-container">
+                <img src="https://media.licdn.com/dms/image/v2/D560BAQExZmj2oHLrbA/company-logo_200_200/company-logo_200_200/0/1715255963145?e=1766620800&v=beta&t=BbCVzlGGGgYeyVdRsSB7uoNgOcRPd2IRI-x9EebPlh4"
+                    alt="Company Logo" class="logo">
+            </div>
+            <h1 class="app-title">Live Visit Tracker</h1>
+            <p class="app-subtitle">Track your school visits efficiently</p>
+
+            <div class="form-group">
+                <label for="emailInput">Email Address</label>
+                <input type="email" id="emailInput" class="input-field" placeholder="Enter your email"
+                    autocomplete="email">
+                <span class="error-message" id="emailError"></span>
+            </div>
+
+            <button id="loginBtn" class="btn btn-primary">
+                <span class="btn-text">Continue</span>
+                <span class="btn-loader hidden"></span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Form Screen -->
+    <div id="formScreen" class="screen">
+        <div class="header">
+            <div class="header-content">
+                <img src="https://media.licdn.com/dms/image/v2/D560BAQExZmj2oHLrbA/company-logo_200_200/company-logo_200_200/0/1715255963145?e=1766620800&v=beta&t=BbCVzlGGGgYeyVdRsSB7uoNgOcRPd2IRI-x9EebPlh4"
+                    alt="Logo" class="header-logo">
+                <div class="user-info">
+                    <span class="user-name" id="userName"></span>
+                    <span class="user-email" id="userEmail"></span>
+                </div>
+                <button id="logoutBtn" class="btn-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="form-container">
+            <form id="visitForm">
+                <!-- District Selection (for managers only) -->
+                <div id="districtGroup" class="form-group hidden">
+                    <label for="districtSelect" class="required">Select District</label>
+                    <div class="select-wrapper">
+                        <input type="text" id="districtSearch" class="input-field search-input"
+                            placeholder="Search district...">
+                        <select id="districtSelect" class="input-field select-field">
+                            <option value="">Select District</option>
+                        </select>
+                    </div>
+                    <span class="error-message" id="districtError"></span>
+                </div>
+
+                <!-- School Selection -->
+                <div id="schoolGroup" class="form-group">
+                    <label for="schoolSelect" class="required">Select School</label>
+                    <div class="select-wrapper">
+                        <input type="text" id="schoolSearch" class="input-field search-input"
+                            placeholder="Search school...">
+                        <select id="schoolSelect" class="input-field select-field">
+                            <option value="">Select School</option>
+                        </select>
+                    </div>
+                    <span class="error-message" id="schoolError"></span>
+                </div>
+
+                <!-- Sampling Needed -->
+                <div id="samplingGroup" class="form-group hidden">
+                    <label for="samplingSelect" class="required">Sampling Needed in this School?</label>
+                    <select id="samplingSelect" class="input-field">
+                        <option value="">Select Option</option>
+                        <option value="Yes, Subject Identified">Yes, Subject Identified</option>
+                        <option value="Yes, Subjects not identified yet">Yes, Subjects not identified yet</option>
+                        <option value="No">No</option>
+                    </select>
+                    <span class="error-message" id="samplingError"></span>
+                </div>
+
+                <!-- Subject Selection (conditional) -->
+                <div id="subjectGroup" class="form-group hidden">
+                    <label class="required">Select Subjects for Sampling</label>
+                    <div class="checkbox-grid">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="subject" value="Maths">
+                            <span>Maths</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="subject" value="Science">
+                            <span>Science</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="subject" value="English Literature">
+                            <span>English Literature</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="subject" value="English Grammar">
+                            <span>English Grammar</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="subject" value="Hindi Literature">
+                            <span>Hindi Literature</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="subject" value="Hindi Grammar">
+                            <span>Hindi Grammar</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="subject" value="Social Studies">
+                            <span>Social Studies</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="subject" value="EVS">
+                            <span>EVS</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="subject" value="GK">
+                            <span>GK</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="subject" value="Computer Science">
+                            <span>Computer Science</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="subject" value="Art">
+                            <span>Art</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="subject" value="Already shared in previous visit">
+                            <span>Already shared in previous visit</span>
+                        </label>
+                    </div>
+                    <span class="error-message" id="subjectError"></span>
+                </div>
+
+                <!-- Discussion Stage -->
+                <div id="discussionGroup" class="form-group hidden">
+                    <label for="discussionSelect" class="required">Discussion Stage</label>
+                    <select id="discussionSelect" class="input-field">
+                        <option value="">Select Stage</option>
+                        <option
+                            value="Initial Discussions (Relationship Building/Brochure Discussion/Gifting/Product Demonstration)">
+                            Initial Discussions (Relationship Building/Brochure Discussion/Gifting/Product
+                            Demonstration)</option>
+                        <option value="Change of Book Identified in School, Awaiting Sampling">Change of Book Identified
+                            in School, Awaiting Sampling</option>
+                        <option value="Sample Submission-K_8">Sample Submission-K_8</option>
+                        <option value="Prescription Discussion/Finalization (Book List shared by School/Distributor)">
+                            Prescription Discussion/Finalization (Book List shared by School/Distributor)</option>
+                        <option value="Book List Out">Book List Out</option>
+                        <option value="After Sales Engagement">After Sales Engagement</option>
+                        <option value="Payment Collection">Payment Collection</option>
+                        <option value="Sample Submission Test Prep">Sample Submission Test Prep</option>
+                        <option value="Meeting did not take place / Meeting postponed">Meeting did not take place /
+                            Meeting postponed</option>
+                    </select>
+                    <span class="error-message" id="discussionError"></span>
+                </div>
+
+                <!-- Meeting SPOC -->
+                <div id="spocGroup" class="form-group hidden">
+                    <label for="spocSelect" class="required">Meeting SPOC</label>
+                    <select id="spocSelect" class="input-field">
+                        <option value="">Select SPOC</option>
+                    </select>
+                    <span class="error-message" id="spocError"></span>
+                </div>
+
+                <!-- Add New SPOC Section -->
+                <div id="newSpocSection" class="new-spoc-section hidden">
+                    <h3 class="section-title">Add New SPOC Details</h3>
+
+                    <div class="form-group">
+                        <label for="newSpocDesignation" class="required">Designation</label>
+                        <select id="newSpocDesignation" class="input-field">
+                            <option value="">Select Designation</option>
+                            <option value="Teacher">Teacher</option>
+                            <option value="Principal">Principal</option>
+                            <option value="Coordinator">Coordinator</option>
+                            <option value="Director">Director</option>
+                            <option value="Vice-Principal">Vice-Principal</option>
+                            <option value="Librarian">Librarian</option>
+                            <option value="Admin Team">Admin Team</option>
+                        </select>
+                        <span class="error-message" id="newSpocDesignationError"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="newSpocName" class="required">Name</label>
+                        <input type="text" id="newSpocName" class="input-field" placeholder="Enter name">
+                        <span class="error-message" id="newSpocNameError"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="newSpocContact" class="required">Contact</label>
+                        <input type="tel" id="newSpocContact" class="input-field" placeholder="Enter contact number"
+                            maxlength="11">
+                        <span class="error-message" id="newSpocContactError"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="newSpocEmail">Email (Optional)</label>
+                        <input type="email" id="newSpocEmail" class="input-field" placeholder="Enter email">
+                        <span class="error-message" id="newSpocEmailError"></span>
+                    </div>
+                </div>
+
+                <!-- Co-Visitor 1 -->
+                <div id="coVisitor1Group" class="form-group hidden">
+                    <label for="coVisitor1Select">Co-Visitor 1 (Optional)</label>
+                    <select id="coVisitor1Select" class="input-field">
+                        <option value="">Select Co-Visitor</option>
+                    </select>
+                </div>
+
+                <!-- Co-Visitor 2 -->
+                <div id="coVisitor2Group" class="form-group hidden">
+                    <label for="coVisitor2Select">Co-Visitor 2 (Optional)</label>
+                    <select id="coVisitor2Select" class="input-field">
+                        <option value="">Select Co-Visitor</option>
+                    </select>
+                </div>
+
+                <!-- Remarks -->
+                <div id="remarksGroup" class="form-group hidden">
+                    <label for="remarksInput">Remarks (Optional)</label>
+                    <textarea id="remarksInput" class="input-field textarea-field" rows="4"
+                        placeholder="Enter any additional remarks..."></textarea>
+                </div>
+
+                <!-- Visit Status -->
+                <div id="visitStatusGroup" class="form-group hidden">
+                    <label for="visitStatusSelect" class="required">After your visit, how likely is this school to give
+                        us the K-8 order?</label>
+                    <div class="status-options">
+                        <label class="status-option">
+                            <input type="radio" name="visitStatus" value="Green">
+                            <span class="status-card green">
+                                <span class="status-icon">🟢</span>
+                                <span class="status-label">Green</span>
+                                <span class="status-percent">90%+</span>
+                            </span>
+                        </label>
+                        <label class="status-option">
+                            <input type="radio" name="visitStatus" value="Yellow">
+                            <span class="status-card yellow">
+                                <span class="status-icon">🟡</span>
+                                <span class="status-label">Yellow</span>
+                                <span class="status-percent">70–90%</span>
+                            </span>
+                        </label>
+                        <label class="status-option">
+                            <input type="radio" name="visitStatus" value="Orange">
+                            <span class="status-card orange">
+                                <span class="status-icon">🟠</span>
+                                <span class="status-label">Orange</span>
+                                <span class="status-percent">30–70%</span>
+                            </span>
+                        </label>
+                        <label class="status-option">
+                            <input type="radio" name="visitStatus" value="Red">
+                            <span class="status-card red">
+                                <span class="status-icon">🔴</span>
+                                <span class="status-label">Red</span>
+                                <span class="status-percent">&lt;30%</span>
+                            </span>
+                        </label>
+                    </div>
+                    <span class="error-message" id="visitStatusError"></span>
+                </div>
+
+                <!-- Image Capture -->
+                <div id="imageGroup" class="form-group hidden">
+                    <label class="required">Capture Image</label>
+                    <div class="image-capture-container">
+                        <input type="file" id="imageInput" accept="image/*" capture="environment" class="hidden">
+                        <button type="button" id="captureBtn" class="btn btn-secondary">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path
+                                    d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z">
+                                </path>
+                                <circle cx="12" cy="13" r="4"></circle>
+                            </svg>
+                            <span>Capture Photo</span>
+                        </button>
+                        <div id="imagePreview" class="image-preview hidden">
+                            <img id="previewImg" src="" alt="Preview">
+                            <button type="button" id="removeImageBtn" class="btn-remove">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <span class="error-message" id="imageError"></span>
+                </div>
+
+                <!-- Submit Button -->
+                <div id="submitGroup" class="form-group hidden">
+                    <button type="submit" id="submitBtn" class="btn btn-primary btn-large">
+                        <span class="btn-text">Submit Visit</span>
+                        <span class="btn-loader hidden"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="success-icon">✓</div>
+            <h2>Visit Submitted Successfully!</h2>
+            <p class="submission-id">Submission ID: <strong id="submissionIdText"></strong></p>
+            <button id="newVisitBtn" class="btn btn-primary">Log Another Visit</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
