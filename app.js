@@ -432,6 +432,8 @@ async function loadFormData() {
 async function loadDistricts() {
     try {
         console.log('=== Loading Districts ===');
+        
+        // Get reportees' districts
         const { data: employees, error: empError } = await supabase
             .from('emp_record')
             .select('email')
@@ -439,22 +441,44 @@ async function loadDistricts() {
 
         if (empError) throw empError;
 
-        if (!employees || employees.length === 0) {
-            alert('No employees found under your management.');
-            return;
+        const employeeEmails = employees && employees.length > 0 ? employees.map(e => e.email) : [];
+
+        // Fetch districts from reportees
+        let reporteesDistricts = [];
+        if (employeeEmails.length > 0) {
+            const { data: reporteesSchools, error: schoolError } = await supabase
+                .from('lvt_universe_data_school_selector')
+                .select('district')
+                .in('employee_email', employeeEmails);
+
+            if (schoolError) throw schoolError;
+            if (reporteesSchools) {
+                reporteesDistricts = reporteesSchools.map(s => s.district).filter(d => d);
+            }
         }
 
-        const employeeEmails = employees.map(e => e.email);
-
-        const { data: schools, error: schoolError } = await supabase
+        // Fetch RM's own districts
+        const { data: ownSchools, error: ownSchoolError } = await supabase
             .from('lvt_universe_data_school_selector')
             .select('district')
-            .in('employee_email', employeeEmails);
+            .eq('employee_email', currentUser.email);
 
-        if (schoolError) throw schoolError;
-        if (!schools) return;
+        if (ownSchoolError) throw ownSchoolError;
+        
+        let ownDistricts = [];
+        if (ownSchools && ownSchools.length > 0) {
+            ownDistricts = ownSchools.map(s => s.district).filter(d => d);
+        }
 
-        const uniqueDistricts = [...new Set(schools.map(s => s.district).filter(d => d))];
+        // Combine and get unique districts
+        const allDistricts = [...reporteesDistricts, ...ownDistricts];
+        const uniqueDistricts = [...new Set(allDistricts)];
+        
+        if (uniqueDistricts.length === 0) {
+            alert('No districts found for you or your team. Please contact admin.');
+            return;
+        }
+        
         uniqueDistricts.sort();
 
         // Populate hidden select
@@ -492,13 +516,24 @@ async function loadSchools(district = null) {
     showLoading('Loading schools...');
 
     try {
-        let query = supabase
-            .from('lvt_universe_data_school_selector')
-            .select('*');
-
         if (userRole === 'field') {
-            query = query.eq('employee_email', currentUser.email);
+            // Field employees - load only their own schools
+            let query = supabase
+                .from('lvt_universe_data_school_selector')
+                .select('*')
+                .eq('employee_email', currentUser.email);
+
+            const { data: schools, error } = await query;
+
+            if (error) throw error;
+
+            // Populate dropdowns
+            populateSchoolDropdowns(schools);
+
         } else {
+            // Managers (RM/ZM) - load own schools + reportees' schools
+            
+            // Get reportees' emails
             const { data: employees, error: empError } = await supabase
                 .from('emp_record')
                 .select('email')
@@ -506,52 +541,50 @@ async function loadSchools(district = null) {
 
             if (empError) throw empError;
 
-            if (!employees || employees.length === 0) {
-                alert('No employees found under your management.');
-                hideLoading();
-                return;
+            const employeeEmails = employees && employees.length > 0 ? employees.map(e => e.email) : [];
+
+            // Fetch reportees' schools
+            let reporteesSchools = [];
+            if (employeeEmails.length > 0) {
+                let reporteesQuery = supabase
+                    .from('lvt_universe_data_school_selector')
+                    .select('*')
+                    .in('employee_email', employeeEmails);
+
+                if (district) {
+                    reporteesQuery = reporteesQuery.eq('district', district);
+                }
+
+                const { data: rSchools, error: rError } = await reporteesQuery;
+                if (rError) throw rError;
+                if (rSchools) reporteesSchools = rSchools;
             }
 
-            const employeeEmails = employees.map(e => e.email);
-            query = query.in('employee_email', employeeEmails);
+            // Fetch manager's own schools
+            let ownQuery = supabase
+                .from('lvt_universe_data_school_selector')
+                .select('*')
+                .eq('employee_email', currentUser.email);
 
             if (district) {
-                query = query.eq('district', district);
+                ownQuery = ownQuery.eq('district', district);
             }
-        }
 
-        const { data: schools, error } = await query;
+            const { data: ownSchools, error: ownError } = await ownQuery;
+            if (ownError) throw ownError;
 
-        if (error) throw error;
+            // Combine schools (own + reportees)
+            const allSchools = [...(ownSchools || []), ...reporteesSchools];
 
-        // Populate hidden select
-        const schoolSelect = document.getElementById('schoolSelect');
-        schoolSelect.innerHTML = '<option value="">Select School</option>';
+            // Remove duplicates based on school_name + district combination
+            const uniqueSchools = Array.from(
+                new Map(allSchools.map(school => 
+                    [`${school.school_name}_${school.district}`, school]
+                )).values()
+            );
 
-        if (schools && schools.length > 0) {
-            schools.sort((a, b) => (a.school_name || '').localeCompare(b.school_name || ''));
-
-            schools.forEach(school => {
-                const option = document.createElement('option');
-                option.value = JSON.stringify(school);
-                option.textContent = school.school_name;
-                schoolSelect.appendChild(option);
-            });
-            
-            // Populate simple dropdown list
-            const schoolList = document.getElementById('schoolList');
-            if (schoolList) {
-                schoolList.innerHTML = '';
-                schools.forEach(school => {
-                    const item = document.createElement('div');
-                    item.className = 'simple-dropdown-item';
-                    item.dataset.value = JSON.stringify(school);
-                    item.textContent = school.school_name;
-                    schoolList.appendChild(item);
-                });
-            }
-        } else {
-            alert('No schools found for your account. Please contact admin.');
+            // Populate dropdowns
+            populateSchoolDropdowns(uniqueSchools);
         }
 
     } catch (error) {
@@ -559,6 +592,38 @@ async function loadSchools(district = null) {
         alert(`Error loading schools: ${error.message}`);
     } finally {
         hideLoading();
+    }
+}
+
+// Helper function to populate school dropdowns
+function populateSchoolDropdowns(schools) {
+    const schoolSelect = document.getElementById('schoolSelect');
+    schoolSelect.innerHTML = '<option value="">Select School</option>';
+
+    if (schools && schools.length > 0) {
+        schools.sort((a, b) => (a.school_name || '').localeCompare(b.school_name || ''));
+
+        schools.forEach(school => {
+            const option = document.createElement('option');
+            option.value = JSON.stringify(school);
+            option.textContent = school.school_name;
+            schoolSelect.appendChild(option);
+        });
+        
+        // Populate simple dropdown list
+        const schoolList = document.getElementById('schoolList');
+        if (schoolList) {
+            schoolList.innerHTML = '';
+            schools.forEach(school => {
+                const item = document.createElement('div');
+                item.className = 'simple-dropdown-item';
+                item.dataset.value = JSON.stringify(school);
+                item.textContent = school.school_name;
+                schoolList.appendChild(item);
+            });
+        }
+    } else {
+        alert('No schools found for the selected district. Please contact admin.');
     }
 }
 
